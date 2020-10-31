@@ -1,1 +1,1 @@
-# affince-cipher
+# affine-cipher
