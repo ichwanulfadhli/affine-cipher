@@ -28,7 +28,7 @@ class Affine {
         elseif($b < 0){
             throw new Error('The key \'b\' cant\'t be a negative number.');
         }
-        elseif(gmp_gcd($a, 26) !== 1){
+        elseif((int)gmp_gcd($a, 26) !== 1){
             throw new Error('The key \'a\' is not prime with 26.');
         }
         elseif(is_numeric($a) === false || is_numeric($b) === false){
