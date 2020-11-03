@@ -18,19 +18,41 @@ class Affine {
 		'u', 'v', 'w', 'x', 'y', 'z'
     );
 
+    /** Greatest Common Divisor 
+     * 
+     * The function which later will be used to determine 
+     * wether or not value of 'a' is prime with value of 'b'.
+     * 
+     * The process to figure out value 'a' is prime with value 'b' 
+     * could've easily been done with PHP built-in function called 
+     * 'gmp_gcd()', but in order to use the function, you have to 
+     * change a setting on php.ini, and we don't want that.
+     * 
+     * @param integer $a 
+     * The first value.
+     * 
+     * @param integer $b 
+     * The second value.
+     * 
+     * @return integer
+     */
+    function gcd($a,$b){
+        return ($a % $b) ? $this->gcd($b,$a % $b) : $b;
+    }
+
     /** Affine Encrypt
      * 
      * The encrypt function, turns a plaintext to a cryptic message.
+     * 
+     * Notice, the first and second key must be an integers,
+     * otherwise the result will be different from as it 
+     * supposed to be.
      * 
      * @param integer $a
      * The first key.
      * 
      * @param integer $b
      * The second key.
-     * 
-     * Notice, the first and second key must be an integers,
-     * otherwise the result will be different from as it 
-     * supposed to be.
      * 
      * @param string $message
      * The plaintext message.
@@ -57,7 +79,7 @@ class Affine {
             throw new Error('The key \'b\' cant\'t be a negative number.');
         }
         // If key 'a' is not prime to 26, then throw an error.
-        elseif((int)gmp_gcd($a, 26) !== 1){
+        elseif((int)$this->gcd($a, 26) !== 1){
             throw new Error('The key \'a\' is not prime with 26.');
         }
         // If key 'a' or 'b' is not an integers, then throw an error.
