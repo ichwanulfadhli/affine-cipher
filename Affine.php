@@ -194,70 +194,109 @@ class Affine {
      * 
      */
     public function decrypt($a, $b, $message){
+        // Error handlers
+        //
+        // If key 'a' or 'b' is not a number, then throw an error.
         if(preg_match('/[0-9]/', $a) === false || preg_match('/[0-9]/', $b) === false){
             throw new Error('The key \'a\' or \'b\' must be a number.');
         }
+        // If key 'a' is less than 1, then throw an error.
         elseif($a < 1){
             throw new Error('The key \'a\' cant\'t be zero.');
         }
+        // If key 'b' is less than 0 or a negative number, then throw an error.
         elseif($b < 0){
             throw new Error('The key \'b\' cant\'t be a negative number.');
         }
+        // If key 'a' is not prime to 26, then throw an error.
         elseif($this->gcd($a, 26) !== 1){
             throw new Error('The key \'a\' is not prime with 26.');
         }
+        // If key 'a' or 'b' is not an integers, then throw an error.
         elseif(is_numeric($a) === false || is_numeric($b) === false){
             throw new Error('The key \'a\' or \'b\' cant\'t be a decimal number.');
         }
+        //
+        // End of error handlers
         else{
-            $output = '';
-            $decrypted = '';
-            $messageSize = strlen($message);
+            // Defining all the necessary variables.
+            $output = ''; # output varable.
+            $decrypted = ''; # decrypted varable.
+            $messageSize = strlen($message); # message length variable.
     
+            // Check if the message consist of a non-aplhabetic characters.
             if(preg_match('/[a-z0-9\W\s_]/', $message)){
+                // Edit the original message, removing  all the non-alphabetic
+                // characters and convert it to lower case.
                 $editedMessage = strtolower(preg_replace("/[0-9\W\s_]/", '', $message));
+                // Edited message length.
                 $editedmessageSize = strlen($editedMessage);
 
+                // The calculation process
                 $i = 1;
                 $x = 0;
+                // The purpose of this loop is to figure out 
+                // modular multiplicative inverse of $a modulo 26.
                 while($x != 1){
                     $x = $this->mod(($a * $i), 26);
+
+                    // If the result of $x is 1, then the calculation 
+                    // is finished and then extract the value of $i.
                     if($x == 1){
                         break;
                     }
+                    // Otherwise continue the calculation.
                     else{
                         $i++;
                     }
                 }
 
                 for($j = 0; $j < $editedmessageSize; $j++){
+                    // Get the letter number from the alphabet lookup.
                     $z = array_search($editedMessage[$j], self::$alphabet);
+                    // After obtaining the letter number, apply the 
+                    // affine cipher encryption formula which is
+                    // f(x) = a * (x - y) mod 26
                     $y = $this->mod(($i * ($z - $b)), 26);
 
+                    // Appending the calculation number and get the letter from
+                    // the alphabet lookup based on the result of $y.
                     $decrypted .= self::$alphabet[$y];
                 }
             }
 
+            // Variable $k for later purpose.
             $k = 0;
 
+            // Reconstructing the output.
             for($j = 0; $j < $messageSize; $j++){
+                // Check if the letter on index $j is an alphabetic.
                 if(ctype_alpha($message[$j])){
+                    // Check of the letter on index $j is an uppercase letter.
                     if(ctype_upper($message[$j])){
+                        // Appending the decrypted message to output.
                         $output .= strtoupper($decrypted[$k]);
         
+                        // Increment
                         $k += 1;
                     }
+                    // Otherwise, it's a lowercase letter
                     else{
+                        // Appending the decrypted message to output.
                         $output .= $decrypted[$k];
         
+                        // Increment
                         $k += 1;
                     }
                 }
+                // Otherwise, just return the original message.
                 else{
+                    // Appending the plaintext message to output.
                     $output .= $message[$j];
                 }
             }
 
+            // Returning the output
             return $output;
         }
     }
