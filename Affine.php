@@ -37,7 +37,25 @@ class Affine {
      * @return integer
      */
     function gcd($a,$b){
-        return ($a % $b) ? $this->gcd($b,$a % $b) : $b;
+        return (int)($a % $b) ? $this->gcd($b,$a % $b) : $b;
+    }
+
+    /** Modulo
+     * 
+     * The function is created due to the built-in function 
+     * fmod() has an issue if the divisor holds a negative value.
+     * 
+     * @param integer $a 
+     * The first value.
+     * 
+     * @param integer $b 
+     * The second value.
+     * 
+     * @return integer
+     */
+    function mod($a, $b){
+        $c = $a % $b;
+        return (int)($c < 0) ? $c + $b : $c;
     }
 
     /** Affine Encrypt
@@ -79,7 +97,7 @@ class Affine {
             throw new Error('The key \'b\' cant\'t be a negative number.');
         }
         // If key 'a' is not prime to 26, then throw an error.
-        elseif((int)$this->gcd($a, 26) !== 1){
+        elseif($this->gcd($a, 26) !== 1){
             throw new Error('The key \'a\' is not prime with 26.');
         }
         // If key 'a' or 'b' is not an integers, then throw an error.
@@ -109,7 +127,7 @@ class Affine {
                     // After obtaining the letter number, apply the 
                     // affine cipher encryption formula which is
                     // f(x) = (ax + b) mod 26
-                    $y = fmod((($a * $x) + $b), 26);
+                    $y = $this->mod((($a * $x) + $b), 26);
 
                     // Appending the calculation number and get the letter from
                     // the alphabet lookup based on the result of $y.
@@ -153,7 +171,94 @@ class Affine {
         }
     }
 
-    public function decrypt($key, $message){
+    /** Affine Decrypt
+     * 
+     * The decrypt function, turns an encrypted message to a plaintext.
+     * 
+     * Notice, the first and second key must be an integers,
+     * otherwise the result will be different from as it 
+     * supposed to be.
+     * 
+     * @param integer $a
+     * The first key.
+     * 
+     * @param integer $b
+     * The second key.
+     * 
+     * @param string $message
+     * The encrypted message.
+     * 
+     * @return string
+     * The final process is returning an encrypted message 
+     * into a plaintext.
+     * 
+     */
+    public function decrypt($a, $b, $message){
+        if(preg_match('/[0-9]/', $a) === false || preg_match('/[0-9]/', $b) === false){
+            throw new Error('The key \'a\' or \'b\' must be a number.');
+        }
+        elseif($a < 1){
+            throw new Error('The key \'a\' cant\'t be zero.');
+        }
+        elseif($b < 0){
+            throw new Error('The key \'b\' cant\'t be a negative number.');
+        }
+        elseif($this->gcd($a, 26) !== 1){
+            throw new Error('The key \'a\' is not prime with 26.');
+        }
+        elseif(is_numeric($a) === false || is_numeric($b) === false){
+            throw new Error('The key \'a\' or \'b\' cant\'t be a decimal number.');
+        }
+        else{
+            $output = '';
+            $decrypted = '';
+            $messageSize = strlen($message);
+    
+            if(preg_match('/[a-z0-9\W\s_]/', $message)){
+                $editedMessage = strtolower(preg_replace("/[0-9\W\s_]/", '', $message));
+                $editedmessageSize = strlen($editedMessage);
 
+                $i = 1;
+                $x = 0;
+                while($x != 1){
+                    $x = $this->mod(($a * $i), 26);
+                    if($x == 1){
+                        break;
+                    }
+                    else{
+                        $i++;
+                    }
+                }
+
+                for($j = 0; $j < $editedmessageSize; $j++){
+                    $z = array_search($editedMessage[$j], self::$alphabet);
+                    $y = $this->mod(($i * ($z - $b)), 26);
+
+                    $decrypted .= self::$alphabet[$y];
+                }
+            }
+
+            $k = 0;
+
+            for($j = 0; $j < $messageSize; $j++){
+                if(ctype_alpha($message[$j])){
+                    if(ctype_upper($message[$j])){
+                        $output .= strtoupper($decrypted[$k]);
+        
+                        $k += 1;
+                    }
+                    else{
+                        $output .= $decrypted[$k];
+        
+                        $k += 1;
+                    }
+                }
+                else{
+                    $output .= $message[$j];
+                }
+            }
+
+            return $output;
+        }
     }
 }
